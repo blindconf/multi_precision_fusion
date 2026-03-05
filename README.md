@@ -31,12 +31,19 @@ In addition, Speechbrain contains pre-trained models that can also be used:
 * [wav2vec 2.0 with CTC trained on LibriSpeech]((https://huggingface.co/speechbrain/asr-wav2vec2-librispeech))
 
 * [Transformer trained on LibriSpeech](https://huggingface.co/speechbrain/asr-transformer-transformerlm-librispeech)
-* Wh
+
+* [Transformer - Whisper](https://huggingface.co/openai/whisper-large-v3)
+
+
+* [] ()
   
 #### 4. Adversarial attacks
-To generate Adversarial Examples in different precisions,
 
-As an example, csv files for Librispeech corpus and its corresponding CW adversarial examples, along with the target transcription, are provided in the results folder. These files can also be used to generate the adversarial examples. 
+1. Generate adversarial examples (e.g., CW or psychoacoustic attacks) by setting the desired precision in the model **hyperparameter configuration files**.
+2. Train or run the attack using these precision settings to produce adversarial audio samples.
+3. For **cross-precision evaluation**, modify the **inference precision** used by the ASR model when decoding the generated samples.
+4. Example `.csv` files for the **LibriSpeech** corpus, including CW adversarial examples and their target transcriptions, are provided in the `results/` folder.
+5. These files can also be used as inputs to reproduce or generate the adversarial examples.
 The data should be stored using the following folder structure:
 ```
 data_set
@@ -57,22 +64,27 @@ data_set
     ├── cw
     ├── ...
 ```
-## Running the experiments
-The scripts below have been tested on a Transformer ASR model trained on LibriSpeech. You can download the pre-trained model from [here](https://ruhr-uni-bochum.sciebo.de/s/lpjW0vxFikG2WqD). These scripts can be easily adjusted for any SpeechBrain recipe. 
 
 ### Computing Characteristics
-To compute the characteristics of the output distribution run the script as follows:
-```
-python distriblock_characteristics.py hparams/transformer.yaml
-```
-We use the hyperparameter file just like in any SpeechBrain recipe. The default `attack_type` hyperparameter refers to the `CW` attack. Change this hyperparameter and csv files if testing another type of adversarial attack.
 
-### Building and evaluating binary classifiers
-The extracted characteristics of the output distribution are used as features for different binary classifiers. To train and evaluate the classifiers use:
-```
+
+1. Run the ASR model on the same input using multiple precision settings.
+2. Collect the resulting transcriptions from each precision configuration.
+3. Compute pairwise differences between the transcriptions using **Word Error Rate (WER)**.
+4. Average these differences to obtain the **precision-diversity score**.
+5. Compare the score against the distribution computed from benign samples to identify potential adversarial inputs.
+
+
+### Building and evaluating Gaussian classifiers
+
+1. Run the ASR model on the same input `x` using multiple precision settings `{p1, ..., pK}`.
+2. Collect the resulting transcriptions: `Y(x) = {f_p1(x), ..., f_pK(x)}`.
+3. Compute the pairwise transcription differences using Word Error Rate (WER).
+4. Average all pairwise WER values to obtain the **precision-diversity score** `D(x)`.
+5. Estimate the mean `μ` and variance `σ²` of `D(x)` on benign samples.
+6. Flag an input as **adversarial** if its score deviates significantly from this benign distribution.
 python distriblock_classifiers.py -h
 
-usage: distriblock_classifiers.py [-h] FOLDER_ORIG FOLDER_ADV
 
 positional arguments:
   FOLDER_ORIG  Folder path that contains the characteristics of the benign examples.
@@ -80,15 +92,5 @@ positional arguments:
 
 options:
   -h, --help   show this help message and exit
-```
-Example for evaluating Distriblock defense against CW attack:
-```
-python distriblock_classifiers.py DistriBlock_data DistriBlock_data/CW/
-```
-### Using filtering to preserve model robustness
-To evaluate Low-pass and Spectral-Gating filters to preserve system robustness, run the following script:
-```
-python distriblock_filtering.py hparams/transformer.yaml
-```
-Again, change the hyperparameters in the YAML file and CSV files if testing another type of adversarial attack.
+
 
