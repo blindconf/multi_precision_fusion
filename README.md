@@ -1,4 +1,4 @@
-# [INTERSPEECH 2026] Precision-Varying Prediction (PVP): Robustifying ASR systems against adversarial attacks
+# [UNDER REVISION 2026] Precision-Varying Prediction (PVP): Robustifying ASR systems against adversarial attacks
 
 This repository contains the implementation for the paper Precision-Varying Prediction (PVP): Robustifying ASR systems against adversarial attacks submitted to Interspeech 2026.
 A demo with a selection of benign, adversarial, and noisy audio samples used in our experiments is available here:
